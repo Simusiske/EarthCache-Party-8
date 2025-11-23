@@ -117,8 +117,25 @@ document.addEventListener("keydown", e => {
   if (e.key === "ArrowDown") bird.vy += 3;
 });
 
+// Mobilní ovládání – dotyk = skok
+canvas.addEventListener("touchstart", () => {
+  document.getElementById("msg").innerText = "";
+
+  if (!started || gameOver) {
+    resetGame();
+    started = true;
+    update();
+  }
+
+  bird.vy = lift;
+});
+
 draw();
 </script>
 </body>
 </html>
+
+</body>
+</html>
+
 
