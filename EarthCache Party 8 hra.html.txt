@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Létající planeta</title>
+<style>
+  body { margin:0; background:#70c5ce; overflow:hidden; font-family:Arial; }
+  #gameCanvas { background:#70c5ce; display:block; margin:0 auto; }
+  #msg { position:absolute; top:20px; width:100%; text-align:center; font-size:24px; color:white; font-weight:bold; text-shadow:0 0 5px black; }
+</style>
+</head>
+<body>
+
+<div id="msg">Stiskni šipku nahoru pro start / Press Up Arrow to start</div>
+<canvas id="gameCanvas" width="480" height="640"></canvas>
+
+<script>
+const canvas = document.getElementById("gameCanvas");
+const ctx = canvas.getContext("2d");
+
+let earthImg = new Image();
+earthImg.src = "https://image.pngaaa.com/323/5430323-middle.png";
+
+let bird = { x:80, y:200, vy:0, size:30 };
+let gravity = 0.45;
+let lift = -8;
+let pipes = [];
+let frame = 0;
+let score = 0;
+let gameOver = false;
+let started = false;
+
+function resetGame() {
+  bird.y = 200; bird.vy = 0;
+  pipes = []; frame = 0; score = 0;
+  gameOver = false; started = false;
+  document.getElementById("msg").innerText = "Stiskni šipku nahoru pro start / Press Up Arrow to start";
+}
+
+function createPipe() {
+  let gap = 190;
+  let top = Math.random() * (canvas.height - gap - 140) + 20;
+  pipes.push({ x:canvas.width, top:top, bottom:top+gap, width:60 });
+}
+
+function drawBird() {
+  ctx.drawImage(earthImg, bird.x - bird.size, bird.y - bird.size, bird.size*2, bird.size*2);
+}
+
+function drawPipes() {
+  ctx.fillStyle = "green";
+  pipes.forEach(p => {
+    ctx.fillRect(p.x, 0, p.width, p.top);
+    ctx.fillRect(p.x, p.bottom, p.width, canvas.height - p.bottom);
+  });
+}
+
+function drawScore() {
+  ctx.fillStyle="white";
+  ctx.font="28px Arial";
+  ctx.fillText(score, 20, 40);
+}
+
+function update() {
+  if (!started || gameOver) return;
+
+  frame++;
+  bird.vy += gravity;
+  bird.y += bird.vy;
+
+  if (frame % 110 === 0) createPipe();
+
+  pipes.forEach(p => p.x -= 3);
+  pipes = pipes.filter(p => p.x + p.width > 0);
+
+  pipes.forEach(p => {
+    if (bird.x + bird.size > p.x && bird.x - bird.size < p.x + p.width) {
+      if (bird.y - bird.size < p.top || bird.y + bird.size > p.bottom) endGame();
+    }
+  });
+
+  if (bird.y + bird.size > canvas.height || bird.y - bird.size < 0) endGame();
+
+  if (frame % 110 === 0) score++;
+
+  if (score >= 30)
+    document.getElementById("msg").innerHTML = "<span style='color:yellow; font-size:32px;'>N 50° 02.882′ E 14° 25.904′</span>";
+
+  draw();
+  requestAnimationFrame(update);
+}
+
+function draw() {
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  drawBird(); drawPipes(); drawScore();
+}
+
+function endGame() {
+  gameOver = true;
+  document.getElementById("msg").innerText = "Konec hry! Nahoru pro restart / Game over! Up to restart";
+}
+
+document.addEventListener("keydown", e => {
+  if (e.key === "ArrowUp") {
+    document.getElementById("msg").innerText = "";
+
+    if (!started || gameOver) {
+      resetGame();
+      started = true;
+      update();
+    }
+
+    bird.vy = lift;
+  }
+
+  if (e.key === "ArrowDown") bird.vy += 3;
+});
+
+draw();
+</script>
+</body>
+</html>
